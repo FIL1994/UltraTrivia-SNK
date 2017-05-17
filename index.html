@@ -1,0 +1,374 @@
+<!--
+Ultra Trivia - SNK
+@author Philip Van Raalte
+@date February 13, 2017
+-->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8">
+        <title>Ultra Trivia - SNK</title>
+        <!--Stylesheets-->
+        <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Raleway|Exo+2|Roboto|Rock+Salt" rel="stylesheet">
+        <link rel="stylesheet" href="lib/materialize/css/materialize.min.css">
+        <style>
+            /*.middle {*/
+                /*margin-left: 35%;*/
+            /*}*/
+            html{
+                height:100%;
+                background-color: antiquewhite;
+            }
+            body{
+                min-height:100%;
+                display:flex;
+                flex-direction:column
+            }
+            #content{
+                flex:1
+            }
+            form {
+                width: 32%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            #question {
+                font-size: 1.3rem;
+                line-height: 110%;
+                margin: .82rem 0 .656rem 0;
+            }
+
+            #btnMusic {
+                position: fixed;
+                left: 2%;
+                bottom: 15%;
+            }
+
+            /*For medals */
+            .medal{
+                position: fixed;
+                bottom: 0px;
+                right:0px;
+                padding: 10px;
+                background-color: grey;
+                opacity: 0.95;
+                color: white;
+                margin: 1rem;
+                text-align: center;
+            }
+            /*For medals */
+            .disappear{
+                opacity:0;
+                transition:opacity 1.2s ease;
+                transition-delay: 1.8s;
+            }
+        </style>
+    </head>
+    <body>
+        <header class="naxbar-fixed">
+            <nav class="blue darken-1">
+                <div class="brand-logo center">
+                    <ul>
+                        <li>ULTRA TRIVIA - SNK</li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+        <section id="content" class="container">
+            <div id="preloader" class="center">
+                <br><br><br><br>
+                <div class="preloader-wrapper big active">
+                    <div class="spinner-layer spinner-green-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div><div class="gap-patch">
+                        <div class="circle"></div>
+                    </div><div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
+                    </div>
+                </div>
+
+                <br>
+            </div>
+            <div id="main" class="hiddendiv">
+                <p id="question" class="center"></p>
+                <div class="divider black"></div>
+                <form action="#">
+                    <p class="middle">
+                        <input name="answers" type="radio" id="test1" />
+                        <label id="a1" for="test1"></label>
+                    </p>
+                    <p class="middle">
+                        <input name="answers" type="radio" id="test2" />
+                        <label id="a2" for="test2"></label>
+                    </p>
+                    <p class="middle">
+                        <input name="answers" type="radio" id="test3"  />
+                        <label id="a3" for="test3"></label>
+                    </p>
+                    <p class="middle">
+                        <input name="answers" type="radio" id="test4"  />
+                        <label id="a4" for="test4"></label>
+                    </p>
+                </form>
+                <div class="center" style="margin-top: 10px;">
+                    <a id="btnNext" class="btn blue-grey darken-1">Next Question</a>
+                </div>
+                <p id="error" class="red-text center"></p>
+                <p id="info" class="center"></p>
+                <p id="seconds" class="center" style="margin: -14px;">0 Seconds</p>
+            </div>
+            <div id="end" class="hiddendiv">
+                <h5 class="center">End Game</h5>
+                <div class="divider black"></div>
+                <br>
+                <p class="center flow-text">
+                    <b id="percent">80%</b>
+                </p>
+                <br>
+                <div class="center">
+                    <a id="btnPlayAgain" class="btn blue-grey darken-1">Play Again</a>
+                </div>
+                <br>
+            </div>
+            <a class="hiddendiv waves-effect waves-light btn blue-grey darken-2" id="btnMusic">Toggle Music</a>
+        </section>
+        <footer class="page-footer blue darken-1">
+            <div class="footer-copyright">
+                <div class="container center">
+                    © 2017 FIL1994
+                </div>
+            </div>
+        </footer>
+        <!--Scripts-->
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script src="lib/materialize/js/materialize.min.js"></script>
+        <script src="lib/soundjs/soundjs-0.6.2.min.js"></script>
+        <script>
+            var soundID = "Theme";
+            var rightID = "right", wrongID = "wrong";
+            var mainTheme, soundRight, soundWrong;
+            var playSound = true;
+
+            //load song
+            createjs.Sound.on("fileload", this.loadHandler, this);
+            createjs.Sound.registerSound("audio/theme.wav", soundID);
+            createjs.Sound.registerSound("audio/right.wav", rightID);
+            createjs.Sound.registerSound("audio/wrong.wav", wrongID);
+
+            function playWrong() {
+                if(playSound)
+                    soundWrong = createjs.Sound.play(wrongID);
+            }
+            function playRight() {
+                if(playSound)
+                    soundRight = createjs.Sound.play(rightID);
+            }
+
+            function loadHandler(event) {
+                // This is fired for each sound that is registered.
+                mainTheme = createjs.Sound.play(soundID, {loop: -1, volume: 1});
+                if(!playSound) {
+                    mainTheme.stop();
+                }
+            }
+            
+            function toggleMusic() {
+                playSound = !playSound;
+                if(!mainTheme.paused && mainTheme.playState != createjs.Sound.PLAY_SUCCEEDED){
+                    mainTheme.play();
+                }
+                else if(mainTheme.paused){
+                    mainTheme.paused = false;
+                }
+                else {
+                    mainTheme.stop();
+                }
+            }
+
+            $('#btnMusic').on('click', toggleMusic);
+
+            function QA () {
+                this.question = "Who founded SNK?";
+                this.answers = ["Bonne Jenet", "Eiji Kisaragi", "Eikichi Kawasaki", "Ralf Jones"];
+                this.correct = 2;
+            }
+
+            var QAs = [];
+            var qa1 = new QA();
+            var qa2 = new QA();
+            qa2.question = "When was SNK founded?";
+            qa2.answers = ["1960", "1978", "1948", "1982"];
+            qa2.correct = 1;
+            var qa3 = new QA();
+            qa3.question = "What type of game is Ozma Wars?";
+            qa3.answers = ["Shooter", "Sports", "Racing", "RPG"];
+            qa3.correct = 0;
+            var qa4 = new QA();
+            qa4.question = "What does SNK stand for?";
+            qa4.answers = ["Shin Nihon Kikaku", "Super Nintendo Kontender", "Saka Neko Kagi", "Shiro Naku Kori"];
+            qa4.correct = 0;
+            var qa5 = new QA();
+            qa5.question = "Which film series was Ikari Warriors inspired by?";
+            qa5.answers = ["Street Hawk", "Airwolf", "Rambo", "Cobra"];
+            qa5.correct = 2;
+            var qa6 = new QA();
+            qa6.question = "When was Alpha Mission released in North America?";
+            qa6.answers = ["1985", "1979", "1989", "1982"];
+            qa6.correct = 0;
+            var qa7 = new QA();
+            qa7.question = "Which system was Crystalis released on?";
+            qa7.answers = ["GBA", "Genesis", "SNES", "NES"];
+            qa7.correct = 3;
+            var qa8 = new QA();
+            qa8.question = "When was the Neo Geo MVS released in Japan?";
+            qa8.answers = ["1988", "1990", "1997", "1993"];
+            qa8.correct = 1;
+            var qa9 = new QA();
+            qa9.question = "What was the Neo Geo MVS designed for?";
+            qa9.answers = ["Arcades", "Homes", "Businesses", "Tourists"];
+            qa9.correct = 0;
+            var qa10 = new QA();
+            qa10.question = "When was the Neo Geo AES released in North America?";
+            qa10.answers = ["1992", "1987", "1989", "1991"];
+            qa10.correct = 3;
+            var qa11 = new QA();
+            qa11.question = "What system was NAM-1975 originally released on?";
+            qa11.answers = ["Playstation", "Genesis", "Neo Geo", "NES"];
+            qa11.correct = 2;
+            var qa12 = new QA();
+            qa12.question = "What type of game is Magician Lord?";
+            qa12.answers = ["RPG", "Platformer", "Strategy", "Shooter"];
+            qa12.correct = 1;
+            var qa13 = new QA();
+            qa13.question = "When was Samurai Shodown II released?";
+            qa13.answers = ["1989", "1998", "1994", "2000"];
+            qa13.correct = 2;
+            var qa14 = new QA();
+            qa14.question = 'Which seal did SNK put on some of its games"?';
+            qa14.answers = ["Power", "Dog Tag", "Elephant", "Ninja"];
+            qa14.correct = 1;
+            var qa15 = new QA();
+            qa15.question = "What was Fatal Fury's biggest competitor?";
+            qa15.answers = ["Tekken 3", "Street Fighter 2", "Soulcalibur", "Primal Rage"];
+            qa15.correct = 1;
+            var qa16 = new QA();
+            qa16.question = "Which game does The King of Fighters '94 not include characters from?";
+            qa16.answers = ["Fatal Fury", "Ikari Warriors", "Sengoku", "Art of Fighting"];
+            qa16.correct = 2;
+            var qa17 = new QA();
+            qa17.question = "Who is the antagonist in the first Metal Slug game?";
+            qa17.answers = ["Rock Howard", "General Morden", "Captain Zard", "Kasumi Todoh"];
+            qa17.correct = 1;
+            var qa18 = new QA();
+            qa18.question = "When was the Neo Geo Pocket Color released in Europe?";
+            qa18.answers = ["1993", "2001", "1991", "1999"];
+            qa18.correct = 3;
+            var qa19 = new QA();
+            qa19.question = "When did the original SNK Corporation  close?";
+            qa19.answers = ["2001", "2003", "2004", "1999"];
+            qa19.correct = 0;
+            var qa20 = new QA();
+            qa20.question = "Which company acquired SNK's IP?";
+            qa20.answers = ["Nintendo", "Sega", "Playmore", "Sony"];
+            qa20.correct = 2;
+
+            QAs.push(qa2, qa1, qa3, qa4, qa5, qa6, qa7, qa8, qa9, qa10, qa11, qa12, qa13, qa14, qa15, qa16, qa17, qa18, qa19, qa20);
+
+            var qaIndex = 0;
+            var correctAnswers = 0;
+            console.log("Starting Ultra Trivia");
+			populateQA();
+			updateInfo();
+			$('#preloader').addClass('hiddendiv');
+			$('#main').removeClass('hiddendiv');
+			$('#btnMusic').removeClass('hiddendiv');
+
+            var seconds = 0;
+            $(document).ready(function(){
+                setInterval(function(){
+                    seconds++;
+                    $('#seconds').html(seconds + " Seconds");
+                }, 1000);
+            });
+
+            $('#btnNext').on('click', function(){
+                if(qaIndex < QAs.length){
+                    var radios = document.getElementsByName('answers');
+                    for (var i = 0; i < radios.length; i++) {
+                        if (radios[i].checked) {
+                            $('#error').html("");
+                            var answer = i;
+
+                            if (i == QAs[qaIndex].correct) {
+                                correctAnswers++;
+                                Materialize.toast('correct', 700, 'rounded');
+                                playRight();
+                            }
+                            else{
+                                Materialize.toast('incorrect', 700, 'rounded');
+                                playWrong();
+                            }
+                            console.log(correctAnswers + "/" + (qaIndex + 1));
+                            qaIndex++;
+                            populateQA();
+                            updateInfo();
+                            break;
+                        }
+                        else if (i == radios.length - 1) {
+                            //no button selected
+                            $('#error').html("You must select an answer");
+                        }
+                    }
+                }
+            });
+
+            $('#btnPlayAgain').on('click', function(){
+               playAgain();
+            });
+
+            function populateQA(){
+                if(qaIndex < QAs.length) {
+                    $('#question').html(QAs[qaIndex].question);
+                    $('#a1').html(QAs[qaIndex].answers[0]);
+                    $('#a2').html(QAs[qaIndex].answers[1]);
+                    $('#a3').html(QAs[qaIndex].answers[2]);
+                    $('#a4').html(QAs[qaIndex].answers[3]);
+                }
+                else{
+                    console.log("END GAME");
+                    $('#main').addClass('hiddendiv');
+                    var score = Math.round((correctAnswers / qaIndex) * 100);
+                    $('#percent').html(score + "%");
+                    $('#end').removeClass('hiddendiv');
+
+                    var endScore = (450 - seconds) / 0.5;
+                    if(endScore < 1) endScore = 1;
+                    endScore = correctAnswers * endScore;
+                    console.log("END SCORE: " + endScore);
+                }
+            }
+            function updateInfo(){
+                var questionNum = (qaIndex + 1);
+                if(questionNum > QAs.length)
+                        questionNum = QAs.length;
+                var info = "Question: " + questionNum + " of " + QAs.length + "<br>Score: " + correctAnswers + "/" + qaIndex;
+                $('#info').html(info);
+            }
+            function playAgain(){
+                qaIndex = 0;
+                correctAnswers = 0;
+                seconds = 0;
+
+                $('#end').addClass('hiddendiv');
+                $('#main').removeClass('hiddendiv');
+
+                populateQA();
+                updateInfo();
+            }
+        </script>
+    </body>
+</html>
